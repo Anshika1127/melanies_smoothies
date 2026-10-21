@@ -12,35 +12,33 @@ name_on_order = st.text_input("Name on the smoothie:")
 cnx=st.connection("snowflake")
 session = cnx.session()
 
-my_dataframe = session.table("smoothies.public.fruit_options").select(
-    col("fruit_name"),col("Search_on")
+fruit_dataframe = session.table("smoothies.public.fruit_options").select(
+    col("fruit_name"),
+    col("search_on"),
 )
-#fruit_options = [row[0] for row in fruit_dataframe.collect()]
-#st.dataframe(data=fruit_dataframe, use_container_width=True)
-
-#convert the snowpark dataframe to pandas dataframe to use LOC funtion
-pd_df=my_dataframe.to_pandas()
-st.dataframe(pd_df)
-st.stop()
+fruit_rows = fruit_dataframe.collect()
+fruit_options = [row[0] for row in fruit_rows]
+search_terms = {row[0]: row[1] for row in fruit_rows}
+st.dataframe(data=fruit_dataframe, use_container_width=True)
 
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
-     my_dataframe,
-     max_selections=5,
+    options=fruit_options,
+    max_selections=5,
 )
 
 if ingredients_list:
-    ingredients_string=''
-    
     for fruit_chosen in ingredients_list:
-        ingredients_string+=fruit_chosen + ''
-        
-        search_on= pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'Search_on'].iloc[0]
-        
-        st.subheader(fruit_chosen + 'Nutrition information')
-        smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{search_on}")  
-        st_df=st.dataframe(data=smoothiefroot_response.json(), use_container_width=True)
-  
+        st.subheader(f"{fruit_chosen} nutrition information")
+        try:
+            response = requests.get(
+                f"https://my.smoothiefroot.com/api/fruit/{search_terms[fruit_chosen]}",
+                timeout=10,
+            )
+            response.raise_for_status()
+            st.json(response.json())
+        except (requests.RequestException, ValueError) as error:
+            st.warning(f"Nutrition information is unavailable: {error}")
 
 if st.button("Submit order"):
     if not name_on_order.strip():
@@ -55,5 +53,3 @@ if st.button("Submit order"):
             params=[ingredients_string, name_on_order.strip()],
         ).collect()
         st.success("Your smoothie is ordered!", icon="✅")
-    
-
