@@ -12,11 +12,11 @@ name_on_order = st.text_input("Name on the smoothie:")
 cnx=st.connection("snowflake")
 session = cnx.session()
 
-fruit_dataframe = session.table("smoothies.public.fruit_options").select(
+my_dataframe = session.table("smoothies.public.fruit_options").select(
     col("fruit_name"),col("Search_on")
 )
-fruit_options = [row[0] for row in fruit_dataframe.collect()]
-st.dataframe(data=fruit_dataframe, use_container_width=True)
+#fruit_options = [row[0] for row in fruit_dataframe.collect()]
+#st.dataframe(data=fruit_dataframe, use_container_width=True)
 
 #convert the snowpark dataframe to pandas dataframe to use LOC funtion
 pd_df=my_dataframe.to_pandas()
