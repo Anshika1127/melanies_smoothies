@@ -35,3 +35,7 @@ if st.button("Submit order"):
             params=[ingredients_string, name_on_order.strip()],
         ).collect()
         st.success("Your smoothie is ordered!", icon="✅")
+
+import requests  
+smoothiefroot_response = requests.get("[https://my.smoothiefroot.com/api/fruit/watermelon](https://my.smoothiefroot.com/api/fruit/watermelon)")  
+st.text(smoothiefroot_response)
